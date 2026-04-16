@@ -34,6 +34,7 @@ public class LdDesignCanvas : Control
     private ScrollBar? _verticalScrollBar;
     private Canvas? _layoutCanvas;
     private Canvas? _paperCanvas;
+    private Rectangle? _paperBorder;
 
     private bool _isApplyingScrollBarValue;
     private double _horizontalOffsetMm;
@@ -239,7 +240,7 @@ public class LdDesignCanvas : Control
             nameof(WorkspaceBackground),
             typeof(Brush),
             typeof(LdDesignCanvas),
-            new FrameworkPropertyMetadata(new SolidColorBrush(Color.FromRgb(244, 244, 244))));
+            new FrameworkPropertyMetadata(new SolidColorBrush(Color.FromRgb(244, 244, 244)), OnVisualPropertyChanged));
 
     public Brush WorkspaceBackground
     {
@@ -265,7 +266,7 @@ public class LdDesignCanvas : Control
             nameof(RulerBackground),
             typeof(Brush),
             typeof(LdDesignCanvas),
-            new FrameworkPropertyMetadata(new SolidColorBrush(Color.FromRgb(248, 248, 248))));
+            new FrameworkPropertyMetadata(new SolidColorBrush(Color.FromRgb(248, 248, 248)), OnVisualPropertyChanged));
 
     public Brush RulerBackground
     {
@@ -469,6 +470,7 @@ public class LdDesignCanvas : Control
         _paperCanvas.Height = DesignHeight;
         Canvas.SetLeft(_paperCanvas, 0d);
         Canvas.SetTop(_paperCanvas, 0d);
+        EnsurePaperBorder();
     }
 
     private void UpdateScrollBars(Size viewportSize)
@@ -542,7 +544,7 @@ public class LdDesignCanvas : Control
     {
         if (!IsVisibleGridlines || GridGapX <= 0d || GridGapY <= 0d || GridDotSize <= 0d)
         {
-            return PaperBackground.CloneCurrentValue();
+            return GetPaperBackgroundBrush().CloneCurrentValue();
         }
 
         var tileWidth = GridGapX;
@@ -552,7 +554,7 @@ public class LdDesignCanvas : Control
         var radius = Math.Min(GridDotSize / 2d, Math.Min(tileWidth, tileHeight) / 2d);
 
         var group = new DrawingGroup();
-        group.Children.Add(new GeometryDrawing(PaperBackground, null, new RectangleGeometry(new Rect(0d, 0d, tileWidth, tileHeight))));
+        group.Children.Add(new GeometryDrawing(GetPaperBackgroundBrush(), null, new RectangleGeometry(new Rect(0d, 0d, tileWidth, tileHeight))));
         group.Children.Add(new GeometryDrawing(GridDotBrush, null, new EllipseGeometry(new Point(offsetX, offsetY), radius, radius)));
 
         if (group.CanFreeze)
@@ -763,4 +765,30 @@ public class LdDesignCanvas : Control
         var result = value % divisor;
         return result < 0d ? result + divisor : result;
     }
+
+    private void EnsurePaperBorder()
+    {
+        if (_paperCanvas is null)
+        {
+            return;
+        }
+
+        _paperBorder ??= new Rectangle
+        {
+            Fill = Brushes.Transparent,
+            IsHitTestVisible = false
+        };
+
+        if (!_paperCanvas.Children.Contains(_paperBorder))
+        {
+            _paperCanvas.Children.Add(_paperBorder);
+        }
+
+        _paperBorder.Width = DesignWidth;
+        _paperBorder.Height = DesignHeight;
+        _paperBorder.Stroke = PaperBorderBrush;
+        _paperBorder.StrokeThickness = 0.2d;
+    }
+
+    private Brush GetPaperBackgroundBrush() => PaperBackground ?? Brushes.White;
 }
