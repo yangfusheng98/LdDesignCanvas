@@ -443,7 +443,6 @@ public class LdDesignCanvas : Control
         {
             _paperCanvas.Width = DesignWidth;
             _paperCanvas.Height = DesignHeight;
-            _paperCanvas.Background = Brushes.Transparent;
             Canvas.SetLeft(_paperCanvas, 0d);
             Canvas.SetTop(_paperCanvas, 0d);
             Panel.SetZIndex(_paperCanvas, 1);
@@ -467,7 +466,6 @@ public class LdDesignCanvas : Control
 
             _layoutCanvas.Width = Math.Max(DesignWidth + workspaceMarginX, viewportWidthMm);
             _layoutCanvas.Height = Math.Max(DesignHeight + workspaceMarginY, viewportHeightMm);
-            _layoutCanvas.Background = Brushes.Transparent;
         }
     }
 
