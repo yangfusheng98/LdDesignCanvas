@@ -715,8 +715,8 @@ public class LdDesignCanvas : Control
     private double GetScalePxPerMm()
     {
         var dpi = VisualTreeHelper.GetDpi(this);
-        var dipPerMm = dpi.PixelsPerInchX / 25.4d / dpi.DpiScaleX;
-        return dipPerMm * ZoomScale;
+        var dipsPerMm = dpi.PixelsPerInchX / 25.4d / dpi.DpiScaleX;
+        return dipsPerMm * ZoomScale;
     }
 
     private Size GetViewportSize()
