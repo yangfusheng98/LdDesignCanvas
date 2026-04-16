@@ -51,10 +51,6 @@ public class LdDesignCanvas : Control
         DefaultStyleKeyProperty.OverrideMetadata(typeof(LdDesignCanvas), new FrameworkPropertyMetadata(typeof(LdDesignCanvas)));
     }
 
-    public double PaperWidth => DesignWidth;
-
-    public double PaperHeight => DesignHeight;
-
     public override void OnApplyTemplate()
     {
         UnhookTemplateEvents();
