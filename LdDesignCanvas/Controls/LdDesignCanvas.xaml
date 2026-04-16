@@ -1,0 +1,15 @@
+<Style TargetType="local:LdDesignCanvas">
+    <Setter Property="Template">
+        <Setter.Value>
+            <ControlTemplate TargetType="local:LdDesignCanvas">
+                <Grid>
+                    <ScrollBar x:Name="VerticalScrollBar" Orientation="Vertical" Maximum="100" Minimum="0" />
+                    <ScrollBar x:Name="HorizontalScrollBar" Orientation="Horizontal" Maximum="100" Minimum="0" />
+                    <Canvas x:Name="PaperCanvas" Width="{Binding DesignWidth}" Height="{Binding DesignHeight}">
+                        <!-- 在这里绘制纸张的内容 -->
+                    </Canvas>
+                </Grid>
+            </ControlTemplate>
+        </Setter.Value>
+    </Setter>
+</Style>
