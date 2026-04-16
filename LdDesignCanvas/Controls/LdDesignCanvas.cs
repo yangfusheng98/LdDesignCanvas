@@ -28,6 +28,8 @@ public class LdDesignCanvas : Control
     private const double MinimumFontSize = 6d;
     private const double LabelSafePadding = 2d;
     private const double DefaultGridDotRadius = 0.18d;
+    private const double TickEpsilon = 0.0001d;
+    private const int MaxRulerTickCount = 4096;
     private static readonly double[] MajorTickCandidates = [1d, 5d, 10d, 20d, 50d, 100d, 200d, 500d, 1000d];
 
     public const string PartTopRulerName = "PART_TopRuler";
@@ -631,7 +633,7 @@ public class LdDesignCanvas : Control
     {
         var tickStep = GetMajorTickInterval();
         var pixelsPerMillimeter = GetDipPerMillimeter();
-        var firstTick = Math.Ceiling((visibleStart - 0.0001d) / tickStep) * tickStep;
+        var firstTick = Math.Ceiling((visibleStart - TickEpsilon) / tickStep) * tickStep;
 
         if (double.IsNaN(firstTick) || double.IsInfinity(firstTick))
         {
@@ -639,7 +641,7 @@ public class LdDesignCanvas : Control
         }
 
         var tickCount = 0;
-        for (var tickValue = firstTick; tickValue <= visibleEnd + 0.0001d && tickCount < 4096; tickValue += tickStep, tickCount++)
+        for (var tickValue = firstTick; tickValue <= visibleEnd + TickEpsilon && tickCount < MaxRulerTickCount; tickValue += tickStep, tickCount++)
         {
             var normalizedValue = NormalizeNumber(tickValue);
             var position = (normalizedValue - visibleStart) * pixelsPerMillimeter;
@@ -790,7 +792,7 @@ public class LdDesignCanvas : Control
 
     private static double NormalizeNumber(double value)
     {
-        return Math.Abs(value) < 0.0001d ? 0d : value;
+        return Math.Abs(value) < TickEpsilon ? 0d : value;
     }
 
     private static string FormatTickValue(double value)
