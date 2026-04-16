@@ -1,0 +1,99 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:controls="clr-namespace:LdDesignCanvas.Controls">
+    <Style TargetType="{x:Type controls:LdDesignCanvas}">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="#FFB8B8B8" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="WorkspaceBackground" Value="#FFF3F3F3" />
+        <Setter Property="PaperBackground" Value="White" />
+        <Setter Property="PaperBorderBrush" Value="#FFD0D0D0" />
+        <Setter Property="PaperBorderThickness" Value="1" />
+        <Setter Property="GridBrush" Value="#FFCCCCCC" />
+        <Setter Property="RulerBackground" Value="#FFF7F7F7" />
+        <Setter Property="RulerForeground" Value="#FF555555" />
+        <Setter Property="RulerLineBrush" Value="#FFD5D5D5" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type controls:LdDesignCanvas}">
+                    <Border
+                        Background="{TemplateBinding Background}"
+                        BorderBrush="{TemplateBinding BorderBrush}"
+                        BorderThickness="{TemplateBinding BorderThickness}">
+                        <Grid SnapsToDevicePixels="True">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="{Binding RulerThickness, RelativeSource={RelativeSource TemplatedParent}}" />
+                                <RowDefinition Height="*" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="{Binding RulerThickness, RelativeSource={RelativeSource TemplatedParent}}" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <Border
+                                Grid.Row="0"
+                                Grid.Column="0"
+                                Background="{TemplateBinding RulerBackground}"
+                                BorderBrush="{TemplateBinding RulerLineBrush}"
+                                BorderThickness="0,0,1,1" />
+
+                            <Canvas
+                                x:Name="PART_TopRuler"
+                                Grid.Row="0"
+                                Grid.Column="1"
+                                Background="{TemplateBinding RulerBackground}"
+                                ClipToBounds="True"
+                                Height="{Binding RulerThickness, RelativeSource={RelativeSource TemplatedParent}}" />
+
+                            <Canvas
+                                x:Name="PART_LeftRuler"
+                                Grid.Row="1"
+                                Grid.Column="0"
+                                Background="{TemplateBinding RulerBackground}"
+                                ClipToBounds="True"
+                                Width="{Binding RulerThickness, RelativeSource={RelativeSource TemplatedParent}}" />
+
+                            <Border
+                                x:Name="PART_Viewport"
+                                Grid.Row="1"
+                                Grid.Column="1"
+                                Background="{TemplateBinding WorkspaceBackground}"
+                                ClipToBounds="True">
+                                <Canvas x:Name="PART_LayoutCanvas" ClipToBounds="False" SnapsToDevicePixels="True">
+                                    <Border
+                                        x:Name="PART_PaperSurface"
+                                        Background="{TemplateBinding PaperBackground}"
+                                        BorderBrush="{TemplateBinding PaperBorderBrush}"
+                                        BorderThickness="{TemplateBinding PaperBorderThickness}"
+                                        SnapsToDevicePixels="True" />
+                                    <Canvas
+                                        x:Name="PART_PaperCanvas"
+                                        Background="Transparent"
+                                        ClipToBounds="False"
+                                        SnapsToDevicePixels="True" />
+                                </Canvas>
+                            </Border>
+
+                            <ScrollBar
+                                x:Name="PART_HScrollBar"
+                                Grid.Row="2"
+                                Grid.Column="1"
+                                Minimum="0"
+                                Orientation="Horizontal" />
+
+                            <ScrollBar
+                                x:Name="PART_VScrollBar"
+                                Grid.Row="1"
+                                Grid.Column="2"
+                                Minimum="0"
+                                Orientation="Vertical" />
+                        </Grid>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+</ResourceDictionary>
