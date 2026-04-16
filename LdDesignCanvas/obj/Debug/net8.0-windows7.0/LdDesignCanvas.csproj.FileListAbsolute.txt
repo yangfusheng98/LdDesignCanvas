@@ -1,3 +1,0 @@
-/home/runner/work/LdDesignCanvas/LdDesignCanvas/LdDesignCanvas/obj/Debug/net8.0-windows7.0/GeneratedInternalTypeHelper.g.cs
-/home/runner/work/LdDesignCanvas/LdDesignCanvas/LdDesignCanvas/obj/Debug/net8.0-windows7.0/LdDesignCanvas_MarkupCompile.cache
-/home/runner/work/LdDesignCanvas/LdDesignCanvas/LdDesignCanvas/obj/Debug/net8.0-windows7.0/LdDesignCanvas_MarkupCompile.lref

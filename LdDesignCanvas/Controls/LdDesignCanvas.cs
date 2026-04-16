@@ -593,7 +593,7 @@ public class LdDesignCanvas : Control
             _topRuler,
             visibleStart,
             visibleEnd,
-            height,
+            width,
             isHorizontal: true,
             (position, value) => CreateHorizontalTick(position, value, width, height));
     }
@@ -622,7 +622,7 @@ public class LdDesignCanvas : Control
             _leftRuler,
             visibleStart,
             visibleEnd,
-            width,
+            height,
             isHorizontal: false,
             (position, value) => CreateVerticalTick(position, value, width, height));
     }
@@ -691,7 +691,7 @@ public class LdDesignCanvas : Control
             SnapsToDevicePixels = true
         };
 
-        var label = CreateRulerLabel(tickValue);
+        var label = CreateRulerLabel(tickValue, Math.Max(0d, rulerWidth - (LabelSafePadding * 2d)));
         label.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
 
         var top = Math.Clamp(position - (label.DesiredSize.Height / 2d), LabelSafePadding, Math.Max(LabelSafePadding, rulerHeight - label.DesiredSize.Height - LabelSafePadding));
@@ -701,16 +701,22 @@ public class LdDesignCanvas : Control
         return [line, label];
     }
 
-    private TextBlock CreateRulerLabel(double value)
+    private TextBlock CreateRulerLabel(double value, double? maxWidth = null)
     {
-        return new TextBlock
+        var label = new TextBlock
         {
             Text = FormatTickValue(value),
             FontSize = RulerFontSize,
             Foreground = RulerForeground,
-            TextTrimming = TextTrimming.CharacterEllipsis,
-            Width = Math.Max(0d, RulerThickness - (LabelSafePadding * 2d))
+            TextTrimming = TextTrimming.CharacterEllipsis
         };
+
+        if (maxWidth.HasValue)
+        {
+            label.Width = maxWidth.Value;
+        }
+
+        return label;
     }
 
     private void AddBaseline(Canvas ruler, double x1, double y1, double x2, double y2)
