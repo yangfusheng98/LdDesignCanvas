@@ -24,8 +24,9 @@ public class LdDesignCanvas : Control
     private const string PartVScrollBar = "PART_VScrollBar";
     private const string PartLayoutCanvas = "PART_LayoutCanvas";
     private const string PartPaperCanvas = "PART_PaperCanvas";
+    private const double TickValueEpsilon = 0.0001d;
 
-    private static readonly double[] MajorTickCandidates = [1d, 5d, 10d, 20d, 50d, 100d, 200d, 500d, 1000d];
+    private static readonly double[] MajorTickCandidatesMm = [1d, 5d, 10d, 20d, 50d, 100d, 200d, 500d, 1000d];
 
     private Border? _viewport;
     private Canvas? _topRuler;
@@ -692,7 +693,7 @@ public class LdDesignCanvas : Control
 
     private double GetMajorTickStep(double scalePxPerMm)
     {
-        foreach (var candidate in MajorTickCandidates)
+        foreach (var candidate in MajorTickCandidatesMm)
         {
             if (candidate * scalePxPerMm >= 40d)
             {
@@ -700,12 +701,12 @@ public class LdDesignCanvas : Control
             }
         }
 
-        return MajorTickCandidates[^1];
+        return MajorTickCandidatesMm[^1];
     }
 
     private string FormatTickValue(double value)
     {
-        var normalized = Math.Abs(value) < 0.0001d ? 0d : value;
+        var normalized = Math.Abs(value) < TickValueEpsilon ? 0d : value;
         return normalized.ToString("0.###", CultureInfo.InvariantCulture);
     }
 
