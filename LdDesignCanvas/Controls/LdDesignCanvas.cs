@@ -28,6 +28,8 @@ public class LdDesignCanvas : Control
     private const double MinimumFontSize = 6d;
     private const double LabelSafePadding = 2d;
     private const double DefaultGridDotRadius = 0.18d;
+    private const double MinimumWorkspaceMarginFallback = 20d;
+    private const double TargetMajorTickSpacing = 48d;
     private const double TickEpsilon = 0.0001d;
     private const int MaxRulerTickCount = 4096;
     private static readonly double[] MajorTickCandidates = [1d, 5d, 10d, 20d, 50d, 100d, 200d, 500d, 1000d];
@@ -749,7 +751,7 @@ public class LdDesignCanvas : Control
 
     private double GetEffectiveWorkspaceMargin(double viewportSizeMillimeters)
     {
-        return Math.Max(WorkspaceMargin, Math.Max(20d, viewportSizeMillimeters * 0.5d));
+        return Math.Max(WorkspaceMargin, Math.Max(MinimumWorkspaceMarginFallback, viewportSizeMillimeters * 0.5d));
     }
 
     private double GetDipPerMillimeter()
@@ -759,19 +761,18 @@ public class LdDesignCanvas : Control
 
     private double GetMajorTickInterval()
     {
-        const double targetPixels = 48d;
         var pixelsPerMillimeter = GetDipPerMillimeter();
 
         foreach (var candidate in MajorTickCandidates)
         {
-            if (candidate * pixelsPerMillimeter >= targetPixels)
+            if (candidate * pixelsPerMillimeter >= TargetMajorTickSpacing)
             {
                 return candidate;
             }
         }
 
         var last = MajorTickCandidates[^1];
-        while (last * pixelsPerMillimeter < targetPixels)
+        while (last * pixelsPerMillimeter < TargetMajorTickSpacing)
         {
             last *= 2d;
         }
