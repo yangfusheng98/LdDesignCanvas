@@ -12,6 +12,13 @@ namespace LdDesignCanvas.Controls
     /// </summary>
     public class RulerElement : FrameworkElement
     {
+        // 缓存 Typeface 对象，避免每次渲染重复创建
+        private static readonly Typeface CachedTypeface =
+            new(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
+
+        // 缓存旋转变换对象，在渲染循环中复用
+        private readonly RotateTransform _cachedRotateTransform = new();
+
         #region 依赖属性
 
         /// <summary>标尺背景画刷</summary>
@@ -150,7 +157,6 @@ namespace LdDesignCanvas.Controls
             var tickPen = new Pen(TickBrush, 1.0);
             tickPen.Freeze();
 
-            var typeface = new Typeface(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.Normal, FontStretches.Normal);
             double fontSize = RulerFontSize;
 
             // 绘制主刻度
@@ -178,7 +184,7 @@ namespace LdDesignCanvas.Controls
                     label,
                     CultureInfo.InvariantCulture,
                     FlowDirection.LeftToRight,
-                    typeface,
+                    CachedTypeface,
                     fontSize,
                     TextBrush,
                     VisualTreeHelper.GetDpi(this).PixelsPerDip);
@@ -215,7 +221,10 @@ namespace LdDesignCanvas.Controls
                     // 如果文字过宽则使用旋转
                     if (formattedText.Width > thickness - 4)
                     {
-                        dc.PushTransform(new RotateTransform(90, textX + formattedText.Height / 2, textY));
+                        _cachedRotateTransform.Angle = 90;
+                        _cachedRotateTransform.CenterX = textX + formattedText.Height / 2;
+                        _cachedRotateTransform.CenterY = textY;
+                        dc.PushTransform(_cachedRotateTransform);
                         dc.DrawText(formattedText, new Point(textX, textY));
                         dc.Pop();
                     }
