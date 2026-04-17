@@ -125,7 +125,7 @@ namespace LdDesignCanvas.Controls
 
         public static readonly DependencyProperty GridGapXProperty =
             DependencyProperty.Register(nameof(GridGapX), typeof(double), typeof(LdDesignCanvas),
-                new FrameworkPropertyMetadata(1.0, OnGridPropertyChanged),
+                new FrameworkPropertyMetadata(0.1, OnGridPropertyChanged),
                 ValidatePositiveSize);
 
         public double GridGapX
@@ -136,7 +136,7 @@ namespace LdDesignCanvas.Controls
 
         public static readonly DependencyProperty GridGapYProperty =
             DependencyProperty.Register(nameof(GridGapY), typeof(double), typeof(LdDesignCanvas),
-                new FrameworkPropertyMetadata(1.0, OnGridPropertyChanged),
+                new FrameworkPropertyMetadata(0.1, OnGridPropertyChanged),
                 ValidatePositiveSize);
 
         public double GridGapY
@@ -177,7 +177,7 @@ namespace LdDesignCanvas.Controls
 
         public static readonly DependencyProperty GridPointSizeProperty =
             DependencyProperty.Register(nameof(GridPointSize), typeof(double), typeof(LdDesignCanvas),
-                new FrameworkPropertyMetadata(0.3, OnGridPropertyChanged),
+                new FrameworkPropertyMetadata(0.06, OnGridPropertyChanged),
                 ValidatePositiveSize);
 
         /// <summary>网格点直径（mm）</summary>
@@ -295,11 +295,11 @@ namespace LdDesignCanvas.Controls
 
         public static readonly DependencyProperty RulerHighlightRatioProperty =
             DependencyProperty.Register(nameof(RulerHighlightRatio), typeof(double), typeof(LdDesignCanvas),
-                new FrameworkPropertyMetadata(0.55, OnRulerStylePropertyChanged));
+                new FrameworkPropertyMetadata(1.0, OnRulerStylePropertyChanged));
 
         /// <summary>
         /// 高亮色沿标尺厚度方向的占比系数（0~1）。
-        /// 默认值 0.55，刚好覆盖刻度数字区域。
+        /// 默认值 1.0，覆盖整个标尺区域（包括刻度线）。
         /// </summary>
         public double RulerHighlightRatio
         {
@@ -625,7 +625,9 @@ namespace LdDesignCanvas.Controls
             double gapY = GridGapY;
             double offsetX = GridOffsetX;
             double offsetY = GridOffsetY;
-            double dotRadius = GridPointSize / 2.0;
+            // 确保点半径不超过格子尺寸的一半，避免点重叠
+            double maxRadius = Math.Min(gapX, gapY) / 2.0;
+            double dotRadius = Math.Min(GridPointSize / 2.0, maxRadius * 0.8);
 
             // 在每个 tile 中心绘制一个点
             var dotGeometry = new EllipseGeometry(new Point(gapX / 2.0, gapY / 2.0), dotRadius, dotRadius);

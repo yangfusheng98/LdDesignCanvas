@@ -307,32 +307,25 @@ namespace LdDesignCanvas.Controls
                 }
                 else
                 {
-                    // 垂直标尺：数字与主刻度顶部平齐，显示在主刻度的下方
-                    double textX = 1;
-                    double textY = pixelPos + 2;
+                    // 垂直标尺：文字旋转 -90°（自底向上阅读），与主刻度顶部平齐，
+                    // 文字略微向左伸出一点点以保持视觉平衡。
+                    // 旋转后：文字的 Height 变为水平宽度，Width 变为垂直高度
+                    double textOriginX = (thickness - tickLen) - formattedText.Height - 1;
+                    double textOriginY = pixelPos - 2;
 
-                    // 裁切检查：确保文字不超出控件下边界
-                    if (textY + formattedText.Height > height)
+                    // 裁切检查：旋转后文字沿 Y 轴向上延伸 formattedText.Width
+                    if (textOriginY - formattedText.Width < 0)
                         continue;
-                    // 确保不超出控件上边界
-                    if (textY < 0)
+                    // 确保不超出控件下边界
+                    if (textOriginY > height)
                         continue;
 
-                    // 垂直标尺上的文字不旋转，直接小号横排显示
-                    // 如果文字过宽则使用旋转
-                    if (formattedText.Width > thickness - 4)
-                    {
-                        _cachedRotateTransform.Angle = 90;
-                        _cachedRotateTransform.CenterX = textX + formattedText.Height / 2;
-                        _cachedRotateTransform.CenterY = textY;
-                        dc.PushTransform(_cachedRotateTransform);
-                        dc.DrawText(formattedText, new Point(textX, textY));
-                        dc.Pop();
-                    }
-                    else
-                    {
-                        dc.DrawText(formattedText, new Point(textX, textY));
-                    }
+                    _cachedRotateTransform.Angle = -90;
+                    _cachedRotateTransform.CenterX = textOriginX + formattedText.Height / 2;
+                    _cachedRotateTransform.CenterY = textOriginY;
+                    dc.PushTransform(_cachedRotateTransform);
+                    dc.DrawText(formattedText, new Point(textOriginX, textOriginY));
+                    dc.Pop();
                 }
             }
 
