@@ -134,11 +134,11 @@ namespace LdDesignCanvas.Controls
 
         /// <summary>
         /// 高亮色沿标尺厚度方向的占比系数（0~1）。
-        /// 默认值 0.55，刚好覆盖刻度数字区域。
+        /// 默认值 1.0，覆盖整个标尺区域（包括刻度线）。
         /// </summary>
         public static readonly DependencyProperty HighlightRatioProperty =
             DependencyProperty.Register(nameof(HighlightRatio), typeof(double), typeof(LdRulerElement),
-                new FrameworkPropertyMetadata(0.55, FrameworkPropertyMetadataOptions.AffectsRender));
+                new FrameworkPropertyMetadata(1.0, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public double HighlightRatio
         {
@@ -292,9 +292,9 @@ namespace LdDesignCanvas.Controls
 
                 if (isHorizontal)
                 {
-                    // 水平标尺：数字绘制在刻度线上方
+                    // 水平标尺：数字与主刻度顶部平齐，显示在主刻度的右边
                     double textX = pixelPos + 2;
-                    double textY = 1;
+                    double textY = thickness - tickLen;
 
                     // 裁切检查：确保文字不超出控件右边界
                     if (textX + formattedText.Width > width)
@@ -307,7 +307,7 @@ namespace LdDesignCanvas.Controls
                 }
                 else
                 {
-                    // 垂直标尺：数字旋转绘制
+                    // 垂直标尺：数字与主刻度顶部平齐，显示在主刻度的下方
                     double textX = 1;
                     double textY = pixelPos + 2;
 

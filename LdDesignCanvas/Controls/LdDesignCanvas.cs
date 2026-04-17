@@ -125,7 +125,7 @@ namespace LdDesignCanvas.Controls
 
         public static readonly DependencyProperty GridGapXProperty =
             DependencyProperty.Register(nameof(GridGapX), typeof(double), typeof(LdDesignCanvas),
-                new FrameworkPropertyMetadata(0.1, OnGridPropertyChanged),
+                new FrameworkPropertyMetadata(1.0, OnGridPropertyChanged),
                 ValidatePositiveSize);
 
         public double GridGapX
@@ -136,7 +136,7 @@ namespace LdDesignCanvas.Controls
 
         public static readonly DependencyProperty GridGapYProperty =
             DependencyProperty.Register(nameof(GridGapY), typeof(double), typeof(LdDesignCanvas),
-                new FrameworkPropertyMetadata(0.1, OnGridPropertyChanged),
+                new FrameworkPropertyMetadata(1.0, OnGridPropertyChanged),
                 ValidatePositiveSize);
 
         public double GridGapY
