@@ -36,13 +36,13 @@
                                     Background="{Binding RulerBackground, RelativeSource={RelativeSource TemplatedParent}}" />
 
                             <!-- 顶部 X 标尺 -->
-                            <local:RulerElement x:Name="PART_TopRuler"
+                            <local:LdRulerElement x:Name="PART_TopRuler"
                                                 Grid.Row="0" Grid.Column="1"
                                                 Orientation="Horizontal"
                                                 ClipToBounds="True" />
 
                             <!-- 左侧 Y 标尺 -->
-                            <local:RulerElement x:Name="PART_LeftRuler"
+                            <local:LdRulerElement x:Name="PART_LeftRuler"
                                                 Grid.Row="1" Grid.Column="0"
                                                 Orientation="Vertical"
                                                 ClipToBounds="True" />
@@ -54,8 +54,23 @@
                                     Background="{Binding CanvasBackground, RelativeSource={RelativeSource TemplatedParent}}">
                                 <!-- 全局设计区域 Canvas -->
                                 <Canvas x:Name="PART_LayoutCanvas">
-                                    <!-- 纸张设计区域 Canvas，锚定在 LayoutCanvas 的 (0,0) -->
-                                    <Canvas x:Name="PART_PaperCanvas" />
+                                    <!-- 纸张外围边框（背景色、阴影） -->
+                                    <Border x:Name="PART_PaperBorder"
+                                            Background="#fdfbc2"
+                                            CornerRadius="0">
+                                        <Border.Effect>
+                                            <DropShadowEffect ShadowDepth="3" BlurRadius="8" Opacity="0.4" Color="Black" />
+                                        </Border.Effect>
+                                        <!-- 纸张设计区域 Canvas -->
+                                        <Canvas x:Name="PART_PaperCanvas">
+                                            <!-- 打印标签边框（最底层，黑边白背景，支持圆角） -->
+                                            <Border x:Name="PART_LabelBorder"
+                                                    BorderBrush="Black"
+                                                    BorderThickness="0.2"
+                                                    Background="White"
+                                                    Panel.ZIndex="-1" />
+                                        </Canvas>
+                                    </Border>
                                 </Canvas>
                             </Border>
 
