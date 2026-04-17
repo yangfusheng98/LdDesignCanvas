@@ -12,12 +12,14 @@ namespace LdDesignCanvas.Controls
     /// 采用自定义 Control 方式实现，通过 ControlTemplate 定义外观。
     /// 内部负责标尺、滚动、缩放、网格背景与纸张区域的联动。
     /// </summary>
-    [TemplatePart(Name = PART_TopRuler, Type = typeof(RulerElement))]
-    [TemplatePart(Name = PART_LeftRuler, Type = typeof(RulerElement))]
+    [TemplatePart(Name = PART_TopRuler, Type = typeof(LdRulerElement))]
+    [TemplatePart(Name = PART_LeftRuler, Type = typeof(LdRulerElement))]
     [TemplatePart(Name = PART_HScrollBar, Type = typeof(ScrollBar))]
     [TemplatePart(Name = PART_VScrollBar, Type = typeof(ScrollBar))]
     [TemplatePart(Name = PART_LayoutCanvas, Type = typeof(Canvas))]
     [TemplatePart(Name = PART_PaperCanvas, Type = typeof(Canvas))]
+    [TemplatePart(Name = PART_PaperBorder, Type = typeof(Border))]
+    [TemplatePart(Name = PART_LabelBorder, Type = typeof(Border))]
     public class LdDesignCanvas : Control
     {
         #region 模板部件名称常量
@@ -28,18 +30,22 @@ namespace LdDesignCanvas.Controls
         private const string PART_VScrollBar = "PART_VScrollBar";
         private const string PART_LayoutCanvas = "PART_LayoutCanvas";
         private const string PART_PaperCanvas = "PART_PaperCanvas";
+        private const string PART_PaperBorder = "PART_PaperBorder";
+        private const string PART_LabelBorder = "PART_LabelBorder";
 
         #endregion
 
         #region 模板部件引用
 
-        private RulerElement? _topRuler;
-        private RulerElement? _leftRuler;
+        private LdRulerElement? _topRuler;
+        private LdRulerElement? _leftRuler;
         private ScrollBar? _hScrollBar;
         private ScrollBar? _vScrollBar;
         private Canvas? _layoutCanvas;
         private Canvas? _paperCanvas;
         private FrameworkElement? _contentArea;
+        private Border? _paperBorder;
+        private Border? _labelBorder;
 
         #endregion
 
@@ -67,7 +73,7 @@ namespace LdDesignCanvas.Controls
 
         public static readonly DependencyProperty DesignWidthProperty =
             DependencyProperty.Register(nameof(DesignWidth), typeof(double), typeof(LdDesignCanvas),
-                new FrameworkPropertyMetadata(100.0, OnLayoutRelatedPropertyChanged),
+                new FrameworkPropertyMetadata(7.62, OnLayoutRelatedPropertyChanged),
                 ValidatePositiveSize);
 
         public double DesignWidth
@@ -78,7 +84,7 @@ namespace LdDesignCanvas.Controls
 
         public static readonly DependencyProperty DesignHeightProperty =
             DependencyProperty.Register(nameof(DesignHeight), typeof(double), typeof(LdDesignCanvas),
-                new FrameworkPropertyMetadata(60.0, OnLayoutRelatedPropertyChanged),
+                new FrameworkPropertyMetadata(5.08, OnLayoutRelatedPropertyChanged),
                 ValidatePositiveSize);
 
         public double DesignHeight
@@ -119,7 +125,7 @@ namespace LdDesignCanvas.Controls
 
         public static readonly DependencyProperty GridGapXProperty =
             DependencyProperty.Register(nameof(GridGapX), typeof(double), typeof(LdDesignCanvas),
-                new FrameworkPropertyMetadata(5.0, OnGridPropertyChanged),
+                new FrameworkPropertyMetadata(0.1, OnGridPropertyChanged),
                 ValidatePositiveSize);
 
         public double GridGapX
@@ -130,7 +136,7 @@ namespace LdDesignCanvas.Controls
 
         public static readonly DependencyProperty GridGapYProperty =
             DependencyProperty.Register(nameof(GridGapY), typeof(double), typeof(LdDesignCanvas),
-                new FrameworkPropertyMetadata(5.0, OnGridPropertyChanged),
+                new FrameworkPropertyMetadata(0.1, OnGridPropertyChanged),
                 ValidatePositiveSize);
 
         public double GridGapY
@@ -161,7 +167,7 @@ namespace LdDesignCanvas.Controls
 
         public static readonly DependencyProperty GridPointBrushProperty =
             DependencyProperty.Register(nameof(GridPointBrush), typeof(Brush), typeof(LdDesignCanvas),
-                new FrameworkPropertyMetadata(Brushes.LightGray, OnGridPropertyChanged));
+                new FrameworkPropertyMetadata(new SolidColorBrush(Color.FromRgb(0x20, 0x20, 0x20)), OnGridPropertyChanged));
 
         public Brush GridPointBrush
         {
@@ -236,6 +242,18 @@ namespace LdDesignCanvas.Controls
             set => SetValue(PaperBackgroundProperty, value);
         }
 
+        // ========== 打印标签圆角 ==========
+
+        public static readonly DependencyProperty LabelCornerRadiusProperty =
+            DependencyProperty.Register(nameof(LabelCornerRadius), typeof(CornerRadius), typeof(LdDesignCanvas),
+                new FrameworkPropertyMetadata(new CornerRadius(0), OnLabelCornerRadiusChanged));
+
+        public CornerRadius LabelCornerRadius
+        {
+            get => (CornerRadius)GetValue(LabelCornerRadiusProperty);
+            set => SetValue(LabelCornerRadiusProperty, value);
+        }
+
         // ========== 设计区域背景 ==========
 
         public static readonly DependencyProperty CanvasBackgroundProperty =
@@ -296,6 +314,12 @@ namespace LdDesignCanvas.Controls
                 canvas.UpdatePaperBackground();
         }
 
+        private static void OnLabelCornerRadiusChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is LdDesignCanvas canvas)
+                canvas.UpdateLabelBorder();
+        }
+
         #endregion
 
         #region 构造函数
@@ -318,13 +342,15 @@ namespace LdDesignCanvas.Controls
             UnsubscribeEvents();
 
             // 获取模板部件引用
-            _topRuler = GetTemplateChild(PART_TopRuler) as RulerElement;
-            _leftRuler = GetTemplateChild(PART_LeftRuler) as RulerElement;
+            _topRuler = GetTemplateChild(PART_TopRuler) as LdRulerElement;
+            _leftRuler = GetTemplateChild(PART_LeftRuler) as LdRulerElement;
             _hScrollBar = GetTemplateChild(PART_HScrollBar) as ScrollBar;
             _vScrollBar = GetTemplateChild(PART_VScrollBar) as ScrollBar;
             _layoutCanvas = GetTemplateChild(PART_LayoutCanvas) as Canvas;
             _paperCanvas = GetTemplateChild(PART_PaperCanvas) as Canvas;
             _contentArea = GetTemplateChild("PART_ContentArea") as FrameworkElement;
+            _paperBorder = GetTemplateChild(PART_PaperBorder) as Border;
+            _labelBorder = GetTemplateChild(PART_LabelBorder) as Border;
 
             // 绑定事件
             SubscribeEvents();
@@ -453,6 +479,7 @@ namespace LdDesignCanvas.Controls
         private void UpdateAllLayout()
         {
             UpdatePaperSize();
+            UpdateLabelBorder();
             UpdateGridBackground();
             UpdatePaperBackground();
             UpdateScrollBars();
@@ -473,9 +500,26 @@ namespace LdDesignCanvas.Controls
             _paperCanvas.Width = DesignWidth;
             _paperCanvas.Height = DesignHeight;
 
-            // PaperCanvas 锚定在 LayoutCanvas 的 (0,0)
-            Canvas.SetLeft(_paperCanvas, 0);
-            Canvas.SetTop(_paperCanvas, 0);
+            // PaperBorder 锚定在 LayoutCanvas 的 (0,0)
+            if (_paperBorder != null)
+            {
+                Canvas.SetLeft(_paperBorder, 0);
+                Canvas.SetTop(_paperBorder, 0);
+            }
+        }
+
+        /// <summary>
+        /// 更新打印标签边框的尺寸和圆角。
+        /// </summary>
+        private void UpdateLabelBorder()
+        {
+            if (_labelBorder == null) return;
+
+            _labelBorder.Width = DesignWidth;
+            _labelBorder.Height = DesignHeight;
+            _labelBorder.CornerRadius = LabelCornerRadius;
+            Canvas.SetLeft(_labelBorder, 0);
+            Canvas.SetTop(_labelBorder, 0);
         }
 
         /// <summary>
@@ -484,7 +528,7 @@ namespace LdDesignCanvas.Controls
         /// </summary>
         private void UpdateGridBackground()
         {
-            if (_paperCanvas == null) return;
+            if (_labelBorder == null) return;
 
             if (!IsVisibleGridlines || GridGapX <= 0 || GridGapY <= 0)
             {
@@ -522,11 +566,11 @@ namespace LdDesignCanvas.Controls
         }
 
         /// <summary>
-        /// 合并纸张背景色和网格点阵到 PaperCanvas 的 Background。
+        /// 合并纸张背景色和网格点阵到 LabelBorder 的 Background。
         /// </summary>
         private void UpdateCombinedPaperBackground(DrawingBrush? gridBrush = null)
         {
-            if (_paperCanvas == null) return;
+            if (_labelBorder == null) return;
 
             if (gridBrush != null && IsVisibleGridlines)
             {
@@ -551,19 +595,19 @@ namespace LdDesignCanvas.Controls
                     Viewbox = new Rect(0, 0, DesignWidth, DesignHeight)
                 };
                 combinedBrush.Freeze();
-                _paperCanvas.Background = combinedBrush;
+                _labelBorder.Background = combinedBrush;
             }
             else
             {
-                _paperCanvas.Background = PaperBackground;
+                _labelBorder.Background = PaperBackground;
             }
         }
 
         /// <summary>清除网格背景，仅保留纸张背景色。</summary>
         private void ClearGridBackground()
         {
-            if (_paperCanvas != null)
-                _paperCanvas.Background = PaperBackground;
+            if (_labelBorder != null)
+                _labelBorder.Background = PaperBackground;
         }
 
         /// <summary>更新纸张背景色。</summary>
@@ -699,20 +743,24 @@ namespace LdDesignCanvas.Controls
 
         /// <summary>
         /// 缩放变化回调。
-        /// 以 PaperCanvas 左上角(0,0) 为锚点，保持其屏幕位置稳定。
+        /// 以 PaperCanvas 中心点为锚点，保持其屏幕位置稳定。
         /// </summary>
         private void OnZoomChanged(double oldZoom, double newZoom)
         {
             if (oldZoom <= 0 || newZoom <= 0) return;
 
-            // 保持纸张左上角(0,0)在屏幕上的像素位置不变
-            // 旧状态下 (0,0) 的像素位置: -scrollX_old * basePixelsPerMm * oldZoom
-            // 新状态下需保持相同: -scrollX_new * basePixelsPerMm * newZoom = -scrollX_old * basePixelsPerMm * oldZoom
-            // => scrollX_new = scrollX_old * oldZoom / newZoom
+            // 保持纸张中心点在屏幕上的像素位置不变
+            // 中心点坐标（mm）: centerX = DesignWidth / 2, centerY = DesignHeight / 2
+            // 旧状态下中心点的像素位置: (centerX - scrollX_old) * basePixelsPerMm * oldZoom
+            // 新状态下需保持相同: (centerX - scrollX_new) * basePixelsPerMm * newZoom = (centerX - scrollX_old) * basePixelsPerMm * oldZoom
+            // => scrollX_new = centerX - (centerX - scrollX_old) * oldZoom / newZoom
+            double centerX = DesignWidth / 2.0;
+            double centerY = DesignHeight / 2.0;
+
             if (_hScrollBar != null)
-                _hScrollBar.Value = _hScrollBar.Value * oldZoom / newZoom;
+                _hScrollBar.Value = centerX - (centerX - _hScrollBar.Value) * oldZoom / newZoom;
             if (_vScrollBar != null)
-                _vScrollBar.Value = _vScrollBar.Value * oldZoom / newZoom;
+                _vScrollBar.Value = centerY - (centerY - _vScrollBar.Value) * oldZoom / newZoom;
 
             // 更新所有布局
             UpdateScrollBars();

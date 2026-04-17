@@ -7,10 +7,10 @@ using System.Windows.Media;
 namespace LdDesignCanvas.Controls
 {
     /// <summary>
-    /// 标尺渲染元素，用于绘制 X/Y 方向的刻度线与数字。
+    /// 标尺渲染元素，用于绘制 X/Y 方向的主刻度线、副刻度线与数字。
     /// 由 LdDesignCanvas 控件通过模板部件引用并设置参数。
     /// </summary>
-    public class RulerElement : FrameworkElement
+    public class LdRulerElement : FrameworkElement
     {
         // 缓存 Typeface 对象，避免每次渲染重复创建
         private static readonly Typeface CachedTypeface =
@@ -23,7 +23,7 @@ namespace LdDesignCanvas.Controls
 
         /// <summary>标尺背景画刷</summary>
         public static readonly DependencyProperty BackgroundProperty =
-            DependencyProperty.Register(nameof(Background), typeof(Brush), typeof(RulerElement),
+            DependencyProperty.Register(nameof(Background), typeof(Brush), typeof(LdRulerElement),
                 new FrameworkPropertyMetadata(null, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public Brush? Background
@@ -34,7 +34,7 @@ namespace LdDesignCanvas.Controls
 
         /// <summary>标尺方向</summary>
         public static readonly DependencyProperty OrientationProperty =
-            DependencyProperty.Register(nameof(Orientation), typeof(Orientation), typeof(RulerElement),
+            DependencyProperty.Register(nameof(Orientation), typeof(Orientation), typeof(LdRulerElement),
                 new FrameworkPropertyMetadata(Orientation.Horizontal, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public Orientation Orientation
@@ -45,7 +45,7 @@ namespace LdDesignCanvas.Controls
 
         /// <summary>当前可视区域起始值（mm）</summary>
         public static readonly DependencyProperty StartValueProperty =
-            DependencyProperty.Register(nameof(StartValue), typeof(double), typeof(RulerElement),
+            DependencyProperty.Register(nameof(StartValue), typeof(double), typeof(LdRulerElement),
                 new FrameworkPropertyMetadata(0.0, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public double StartValue
@@ -56,7 +56,7 @@ namespace LdDesignCanvas.Controls
 
         /// <summary>每毫米对应的显示像素数（已包含缩放）</summary>
         public static readonly DependencyProperty PixelsPerUnitProperty =
-            DependencyProperty.Register(nameof(PixelsPerUnit), typeof(double), typeof(RulerElement),
+            DependencyProperty.Register(nameof(PixelsPerUnit), typeof(double), typeof(LdRulerElement),
                 new FrameworkPropertyMetadata(3.7795, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public double PixelsPerUnit
@@ -67,7 +67,7 @@ namespace LdDesignCanvas.Controls
 
         /// <summary>标尺刻度线颜色</summary>
         public static readonly DependencyProperty TickBrushProperty =
-            DependencyProperty.Register(nameof(TickBrush), typeof(Brush), typeof(RulerElement),
+            DependencyProperty.Register(nameof(TickBrush), typeof(Brush), typeof(LdRulerElement),
                 new FrameworkPropertyMetadata(Brushes.Black, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public Brush TickBrush
@@ -78,7 +78,7 @@ namespace LdDesignCanvas.Controls
 
         /// <summary>标尺文字颜色</summary>
         public static readonly DependencyProperty TextBrushProperty =
-            DependencyProperty.Register(nameof(TextBrush), typeof(Brush), typeof(RulerElement),
+            DependencyProperty.Register(nameof(TextBrush), typeof(Brush), typeof(LdRulerElement),
                 new FrameworkPropertyMetadata(Brushes.Black, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public Brush TextBrush
@@ -89,7 +89,7 @@ namespace LdDesignCanvas.Controls
 
         /// <summary>标尺字体大小</summary>
         public static readonly DependencyProperty RulerFontSizeProperty =
-            DependencyProperty.Register(nameof(RulerFontSize), typeof(double), typeof(RulerElement),
+            DependencyProperty.Register(nameof(RulerFontSize), typeof(double), typeof(LdRulerElement),
                 new FrameworkPropertyMetadata(10.0, FrameworkPropertyMetadataOptions.AffectsRender));
 
         public double RulerFontSize
@@ -108,6 +108,12 @@ namespace LdDesignCanvas.Controls
 
         // 主刻度线长度占标尺厚度的比例
         private const double MajorTickRatio = 0.45;
+
+        // 副刻度线长度占标尺厚度的比例
+        private const double MinorTickRatio = 0.25;
+
+        // 每个主刻度之间的副刻度数量
+        private const int MinorTickCount = 5;
 
         /// <summary>
         /// 根据当前缩放比例计算合适的主刻度间隔（mm）。
@@ -232,6 +238,33 @@ namespace LdDesignCanvas.Controls
                     {
                         dc.DrawText(formattedText, new Point(textX, textY));
                     }
+                }
+            }
+
+            // 绘制副刻度（不显示数字）
+            double minorInterval = tickInterval / MinorTickCount;
+            double minorTickLen = thickness * MinorTickRatio;
+            double firstMinorTick = Math.Floor(viewStartMm / minorInterval) * minorInterval;
+
+            for (double v = firstMinorTick; v <= viewEndMm + minorInterval; v += minorInterval)
+            {
+                // 跳过与主刻度重合的位置
+                double remainder = Math.Abs(v % tickInterval);
+                if (remainder < minorInterval * 0.1 || remainder > tickInterval - minorInterval * 0.1)
+                    continue;
+
+                double pixelPos = (v - startMm) * ppu;
+
+                // 超出控件范围则跳过
+                if (pixelPos < -1 || pixelPos > length + 1) continue;
+
+                if (isHorizontal)
+                {
+                    dc.DrawLine(tickPen, new Point(pixelPos, thickness - minorTickLen), new Point(pixelPos, thickness));
+                }
+                else
+                {
+                    dc.DrawLine(tickPen, new Point(thickness - minorTickLen, pixelPos), new Point(thickness, pixelPos));
                 }
             }
         }
