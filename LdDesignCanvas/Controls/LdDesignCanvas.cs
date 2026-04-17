@@ -73,7 +73,7 @@ namespace LdDesignCanvas.Controls
 
         public static readonly DependencyProperty DesignWidthProperty =
             DependencyProperty.Register(nameof(DesignWidth), typeof(double), typeof(LdDesignCanvas),
-                new FrameworkPropertyMetadata(7.62, OnLayoutRelatedPropertyChanged),
+                new FrameworkPropertyMetadata(7.62, OnLayoutRelatedPropertyChanged), // 默认: 7.62mm（标准标签宽度）
                 ValidatePositiveSize);
 
         public double DesignWidth
@@ -84,7 +84,7 @@ namespace LdDesignCanvas.Controls
 
         public static readonly DependencyProperty DesignHeightProperty =
             DependencyProperty.Register(nameof(DesignHeight), typeof(double), typeof(LdDesignCanvas),
-                new FrameworkPropertyMetadata(5.08, OnLayoutRelatedPropertyChanged),
+                new FrameworkPropertyMetadata(5.08, OnLayoutRelatedPropertyChanged), // 默认: 5.08mm（标准标签高度）
                 ValidatePositiveSize);
 
         public double DesignHeight

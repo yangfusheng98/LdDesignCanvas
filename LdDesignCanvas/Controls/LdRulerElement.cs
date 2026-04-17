@@ -112,8 +112,8 @@ namespace LdDesignCanvas.Controls
         // 副刻度线长度占标尺厚度的比例
         private const double MinorTickRatio = 0.25;
 
-        // 每个主刻度之间的副刻度数量
-        private const int MinorTickCount = 5;
+        // 每个主刻度之间的副刻度分段数
+        private const int MinorTickDivisions = 5;
 
         /// <summary>
         /// 根据当前缩放比例计算合适的主刻度间隔（mm）。
@@ -242,7 +242,7 @@ namespace LdDesignCanvas.Controls
             }
 
             // 绘制副刻度（不显示数字）
-            double minorInterval = tickInterval / MinorTickCount;
+            double minorInterval = tickInterval / MinorTickDivisions;
             double minorTickLen = thickness * MinorTickRatio;
             double firstMinorTick = Math.Floor(viewStartMm / minorInterval) * minorInterval;
 
