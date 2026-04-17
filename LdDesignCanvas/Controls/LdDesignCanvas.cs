@@ -191,7 +191,7 @@ namespace LdDesignCanvas.Controls
 
         public static readonly DependencyProperty RulerBackgroundProperty =
             DependencyProperty.Register(nameof(RulerBackground), typeof(Brush), typeof(LdDesignCanvas),
-                new FrameworkPropertyMetadata(new SolidColorBrush(Color.FromRgb(240, 240, 240)),
+                new FrameworkPropertyMetadata(new SolidColorBrush(Color.FromRgb(0xe6, 0xe6, 0xe6)),
                     OnRulerStylePropertyChanged));
 
         public Brush RulerBackground
@@ -258,12 +258,53 @@ namespace LdDesignCanvas.Controls
 
         public static readonly DependencyProperty CanvasBackgroundProperty =
             DependencyProperty.Register(nameof(CanvasBackground), typeof(Brush), typeof(LdDesignCanvas),
-                new FrameworkPropertyMetadata(new SolidColorBrush(Color.FromRgb(200, 200, 200))));
+                new FrameworkPropertyMetadata(new SolidColorBrush(Color.FromRgb(0xe6, 0xe6, 0xe6))));
 
         public Brush CanvasBackground
         {
             get => (Brush)GetValue(CanvasBackgroundProperty);
             set => SetValue(CanvasBackgroundProperty, value);
+        }
+
+        // ========== 标尺光标颜色 ==========
+
+        public static readonly DependencyProperty RulerCursorBrushProperty =
+            DependencyProperty.Register(nameof(RulerCursorBrush), typeof(Brush), typeof(LdDesignCanvas),
+                new FrameworkPropertyMetadata(Brushes.Black, OnRulerStylePropertyChanged));
+
+        /// <summary>标尺上鼠标光标指示线颜色</summary>
+        public Brush RulerCursorBrush
+        {
+            get => (Brush)GetValue(RulerCursorBrushProperty);
+            set => SetValue(RulerCursorBrushProperty, value);
+        }
+
+        // ========== 标尺高亮属性 ==========
+
+        public static readonly DependencyProperty RulerHighlightBrushProperty =
+            DependencyProperty.Register(nameof(RulerHighlightBrush), typeof(Brush), typeof(LdDesignCanvas),
+                new FrameworkPropertyMetadata(new SolidColorBrush(Color.FromRgb(0xd3, 0xd1, 0xd3)),
+                    OnRulerStylePropertyChanged));
+
+        /// <summary>标尺高亮色，用于标示 Design 宽度/高度对应区域</summary>
+        public Brush RulerHighlightBrush
+        {
+            get => (Brush)GetValue(RulerHighlightBrushProperty);
+            set => SetValue(RulerHighlightBrushProperty, value);
+        }
+
+        public static readonly DependencyProperty RulerHighlightRatioProperty =
+            DependencyProperty.Register(nameof(RulerHighlightRatio), typeof(double), typeof(LdDesignCanvas),
+                new FrameworkPropertyMetadata(0.55, OnRulerStylePropertyChanged));
+
+        /// <summary>
+        /// 高亮色沿标尺厚度方向的占比系数（0~1）。
+        /// 默认值 0.55，刚好覆盖刻度数字区域。
+        /// </summary>
+        public double RulerHighlightRatio
+        {
+            get => (double)GetValue(RulerHighlightRatioProperty);
+            set => SetValue(RulerHighlightRatioProperty, value);
         }
 
         #endregion
@@ -373,7 +414,11 @@ namespace LdDesignCanvas.Controls
             if (_vScrollBar != null)
                 _vScrollBar.ValueChanged += OnVScrollBarValueChanged;
             if (_contentArea != null)
+            {
                 _contentArea.SizeChanged += OnContentAreaSizeChanged;
+                _contentArea.MouseMove += OnContentAreaMouseMove;
+                _contentArea.MouseLeave += OnContentAreaMouseLeave;
+            }
         }
 
         private void UnsubscribeEvents()
@@ -383,7 +428,11 @@ namespace LdDesignCanvas.Controls
             if (_vScrollBar != null)
                 _vScrollBar.ValueChanged -= OnVScrollBarValueChanged;
             if (_contentArea != null)
+            {
                 _contentArea.SizeChanged -= OnContentAreaSizeChanged;
+                _contentArea.MouseMove -= OnContentAreaMouseMove;
+                _contentArea.MouseLeave -= OnContentAreaMouseLeave;
+            }
         }
 
         #endregion
@@ -406,6 +455,41 @@ namespace LdDesignCanvas.Controls
         {
             UpdateScrollBars();
             UpdateRulers();
+        }
+
+        /// <summary>
+        /// 鼠标在内容区域移动时更新标尺光标位置。
+        /// </summary>
+        private void OnContentAreaMouseMove(object sender, MouseEventArgs e)
+        {
+            if (_contentArea == null) return;
+
+            var pos = e.GetPosition(_contentArea);
+            double scrollX = _hScrollBar?.Value ?? 0;
+            double scrollY = _vScrollBar?.Value ?? 0;
+            double factor = BasePixelsPerMm * ZoomScale;
+
+            if (factor > 0)
+            {
+                double mmX = scrollX + pos.X / factor;
+                double mmY = scrollY + pos.Y / factor;
+
+                if (_topRuler != null)
+                    _topRuler.CursorPosition = mmX;
+                if (_leftRuler != null)
+                    _leftRuler.CursorPosition = mmY;
+            }
+        }
+
+        /// <summary>
+        /// 鼠标离开内容区域时清除标尺光标。
+        /// </summary>
+        private void OnContentAreaMouseLeave(object sender, MouseEventArgs e)
+        {
+            if (_topRuler != null)
+                _topRuler.CursorPosition = double.NaN;
+            if (_leftRuler != null)
+                _leftRuler.CursorPosition = double.NaN;
         }
 
         /// <summary>
@@ -694,7 +778,7 @@ namespace LdDesignCanvas.Controls
         #region 标尺更新
 
         /// <summary>
-        /// 更新标尺的起始值和缩放参数。
+        /// 更新标尺的起始值和缩放参数，并设置高亮范围。
         /// </summary>
         private void UpdateRulers()
         {
@@ -706,12 +790,16 @@ namespace LdDesignCanvas.Controls
             {
                 _topRuler.StartValue = scrollX;
                 _topRuler.PixelsPerUnit = factor;
+                _topRuler.HighlightStart = 0;
+                _topRuler.HighlightEnd = DesignWidth;
             }
 
             if (_leftRuler != null)
             {
                 _leftRuler.StartValue = scrollY;
                 _leftRuler.PixelsPerUnit = factor;
+                _leftRuler.HighlightStart = 0;
+                _leftRuler.HighlightEnd = DesignHeight;
             }
         }
 
@@ -726,6 +814,9 @@ namespace LdDesignCanvas.Controls
                 _topRuler.TextBrush = RulerForeground;
                 _topRuler.TickBrush = RulerTickBrush;
                 _topRuler.RulerFontSize = RulerFontSize;
+                _topRuler.CursorBrush = RulerCursorBrush;
+                _topRuler.HighlightBrush = RulerHighlightBrush;
+                _topRuler.HighlightRatio = RulerHighlightRatio;
             }
 
             if (_leftRuler != null)
@@ -734,6 +825,9 @@ namespace LdDesignCanvas.Controls
                 _leftRuler.TextBrush = RulerForeground;
                 _leftRuler.TickBrush = RulerTickBrush;
                 _leftRuler.RulerFontSize = RulerFontSize;
+                _leftRuler.CursorBrush = RulerCursorBrush;
+                _leftRuler.HighlightBrush = RulerHighlightBrush;
+                _leftRuler.HighlightRatio = RulerHighlightRatio;
             }
         }
 
@@ -763,6 +857,52 @@ namespace LdDesignCanvas.Controls
                 _vScrollBar.Value = centerY - (centerY - _vScrollBar.Value) * oldZoom / newZoom;
 
             // 更新所有布局
+            UpdateScrollBars();
+            UpdateViewTransform();
+            UpdateRulers();
+        }
+
+        #endregion
+
+        #region 自适应显示
+
+        /// <summary>
+        /// 自动调整缩放和位置，在视口中心完整显示 Paper 区域。
+        /// </summary>
+        public void FitToView()
+        {
+            double viewportWidth = _contentArea?.ActualWidth ?? ActualWidth;
+            double viewportHeight = _contentArea?.ActualHeight ?? ActualHeight;
+
+            if (viewportWidth <= 0 || viewportHeight <= 0) return;
+            if (DesignWidth <= 0 || DesignHeight <= 0) return;
+
+            // 计算需要的缩放比例使纸张完全可见，并留出 5% 的边距
+            double margin = 0.95;
+            double scaleX = (viewportWidth * margin) / (DesignWidth * BasePixelsPerMm);
+            double scaleY = (viewportHeight * margin) / (DesignHeight * BasePixelsPerMm);
+            double newZoom = Math.Min(scaleX, scaleY);
+
+            // 应用缩放（不触发 OnZoomChanged 的锚点逻辑，直接设置值后手动更新）
+            newZoom = Math.Clamp(newZoom, 0.1, 30.0);
+            ZoomScale = newZoom;
+
+            // 计算滚动位置使纸张居中
+            double factor = BasePixelsPerMm * newZoom;
+            double paperPixelWidth = DesignWidth * factor;
+            double paperPixelHeight = DesignHeight * factor;
+
+            // 纸张中心应该在视口中心
+            // scrollX 使得 (DesignWidth/2 - scrollX) * factor = viewportWidth/2
+            // => scrollX = DesignWidth/2 - viewportWidth/(2*factor)
+            double scrollX = DesignWidth / 2.0 - viewportWidth / (2.0 * factor);
+            double scrollY = DesignHeight / 2.0 - viewportHeight / (2.0 * factor);
+
+            if (_hScrollBar != null)
+                _hScrollBar.Value = scrollX;
+            if (_vScrollBar != null)
+                _vScrollBar.Value = scrollY;
+
             UpdateScrollBars();
             UpdateViewTransform();
             UpdateRulers();

@@ -98,10 +98,80 @@ namespace LdDesignCanvas.Controls
             set => SetValue(RulerFontSizeProperty, value);
         }
 
+        /// <summary>高亮区域起始值（mm）</summary>
+        public static readonly DependencyProperty HighlightStartProperty =
+            DependencyProperty.Register(nameof(HighlightStart), typeof(double), typeof(LdRulerElement),
+                new FrameworkPropertyMetadata(double.NaN, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public double HighlightStart
+        {
+            get => (double)GetValue(HighlightStartProperty);
+            set => SetValue(HighlightStartProperty, value);
+        }
+
+        /// <summary>高亮区域结束值（mm）</summary>
+        public static readonly DependencyProperty HighlightEndProperty =
+            DependencyProperty.Register(nameof(HighlightEnd), typeof(double), typeof(LdRulerElement),
+                new FrameworkPropertyMetadata(double.NaN, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public double HighlightEnd
+        {
+            get => (double)GetValue(HighlightEndProperty);
+            set => SetValue(HighlightEndProperty, value);
+        }
+
+        /// <summary>高亮色画刷</summary>
+        public static readonly DependencyProperty HighlightBrushProperty =
+            DependencyProperty.Register(nameof(HighlightBrush), typeof(Brush), typeof(LdRulerElement),
+                new FrameworkPropertyMetadata(new SolidColorBrush(Color.FromRgb(0xd3, 0xd1, 0xd3)),
+                    FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public Brush HighlightBrush
+        {
+            get => (Brush)GetValue(HighlightBrushProperty);
+            set => SetValue(HighlightBrushProperty, value);
+        }
+
+        /// <summary>
+        /// 高亮色沿标尺厚度方向的占比系数（0~1）。
+        /// 默认值 0.55，刚好覆盖刻度数字区域。
+        /// </summary>
+        public static readonly DependencyProperty HighlightRatioProperty =
+            DependencyProperty.Register(nameof(HighlightRatio), typeof(double), typeof(LdRulerElement),
+                new FrameworkPropertyMetadata(0.55, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public double HighlightRatio
+        {
+            get => (double)GetValue(HighlightRatioProperty);
+            set => SetValue(HighlightRatioProperty, value);
+        }
+
+        /// <summary>光标位置值（mm），NaN 表示不显示光标</summary>
+        public static readonly DependencyProperty CursorPositionProperty =
+            DependencyProperty.Register(nameof(CursorPosition), typeof(double), typeof(LdRulerElement),
+                new FrameworkPropertyMetadata(double.NaN, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public double CursorPosition
+        {
+            get => (double)GetValue(CursorPositionProperty);
+            set => SetValue(CursorPositionProperty, value);
+        }
+
+        /// <summary>光标颜色</summary>
+        public static readonly DependencyProperty CursorBrushProperty =
+            DependencyProperty.Register(nameof(CursorBrush), typeof(Brush), typeof(LdRulerElement),
+                new FrameworkPropertyMetadata(Brushes.Black, FrameworkPropertyMetadataOptions.AffectsRender));
+
+        public Brush CursorBrush
+        {
+            get => (Brush)GetValue(CursorBrushProperty);
+            set => SetValue(CursorBrushProperty, value);
+        }
+
         #endregion
 
-        // 主刻度候选间隔（mm）
-        private static readonly double[] MajorTickIntervals = { 1, 2, 5, 10, 20, 50, 100, 200, 500, 1000 };
+        // 主刻度候选间隔（mm），最大不超过 10mm
+        private static readonly double[] MajorTickIntervals = { 0.1, 0.5, 1.0, 5.0, 10.0 };
 
         // 主刻度之间的最小像素间距
         private const double MinPixelsPerMajorTick = 40.0;
@@ -146,12 +216,37 @@ namespace LdDesignCanvas.Controls
             if (Background != null)
                 dc.DrawRectangle(Background, null, new Rect(0, 0, width, height));
 
-            double tickInterval = CalculateTickInterval();
-            double startMm = StartValue;
-
             bool isHorizontal = (Orientation == Orientation.Horizontal);
             double length = isHorizontal ? width : height;
             double thickness = isHorizontal ? height : width;
+
+            double startMm = StartValue;
+
+            // 绘制高亮区域（Design 宽度/高度对应标尺）
+            double hlStart = HighlightStart;
+            double hlEnd = HighlightEnd;
+            if (!double.IsNaN(hlStart) && !double.IsNaN(hlEnd) && hlEnd > hlStart && HighlightBrush != null)
+            {
+                double hlPixelStart = (hlStart - startMm) * ppu;
+                double hlPixelEnd = (hlEnd - startMm) * ppu;
+
+                // 裁切到可见范围
+                hlPixelStart = Math.Max(hlPixelStart, 0);
+                hlPixelEnd = Math.Min(hlPixelEnd, length);
+
+                if (hlPixelEnd > hlPixelStart)
+                {
+                    double hlThickness = thickness * Math.Clamp(HighlightRatio, 0, 1);
+                    Rect hlRect;
+                    if (isHorizontal)
+                        hlRect = new Rect(hlPixelStart, 0, hlPixelEnd - hlPixelStart, hlThickness);
+                    else
+                        hlRect = new Rect(0, hlPixelStart, hlThickness, hlPixelEnd - hlPixelStart);
+                    dc.DrawRectangle(HighlightBrush, null, hlRect);
+                }
+            }
+
+            double tickInterval = CalculateTickInterval();
 
             // 计算刻度绘制范围（mm）
             double viewStartMm = startMm;
@@ -265,6 +360,27 @@ namespace LdDesignCanvas.Controls
                 else
                 {
                     dc.DrawLine(tickPen, new Point(thickness - minorTickLen, pixelPos), new Point(thickness, pixelPos));
+                }
+            }
+
+            // 绘制光标指示线
+            double cursorPos = CursorPosition;
+            if (!double.IsNaN(cursorPos) && CursorBrush != null)
+            {
+                double cursorPixel = (cursorPos - startMm) * ppu;
+                if (cursorPixel >= 0 && cursorPixel <= length)
+                {
+                    var cursorPen = new Pen(CursorBrush, 1.0);
+                    cursorPen.Freeze();
+
+                    if (isHorizontal)
+                    {
+                        dc.DrawLine(cursorPen, new Point(cursorPixel, 0), new Point(cursorPixel, thickness));
+                    }
+                    else
+                    {
+                        dc.DrawLine(cursorPen, new Point(0, cursorPixel), new Point(thickness, cursorPixel));
+                    }
                 }
             }
         }
